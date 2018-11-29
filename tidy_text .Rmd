@@ -49,10 +49,64 @@ inspection_words =
   
 ```
 
-
 Count some words...
 
 ```{r}
+inspection_words %>% 
+  count(word, sort = TRUE) %>% 
+  top_n(10) %>% 
+  mutate(word = fct_reorder(word, n)) %>% 
+  ggplot(aes(x = word, y = n)) + 
+  geom_bar(stat = "identity", fill = "blue", alpha = .6) + 
+  coord_flip()
+## Retain the frequency of the word: top 1 is the food 
+```
 
+
+## Compare words in different groups 
+
+Compare odds ratios A to C
+
+```{r}
+word_ratios = 
+  inspection_words %>%
+  filter(grade %in% c("A", "C")) %>% 
+  count(word, grade) %>%
+  group_by(word) %>% 
+  filter(sum(n) >= 5) %>%
+  ungroup() %>%
+  spread(grade, n, fill = 0) %>% ## fill the NA with 0.
+  mutate(
+    C_odds = (C + 1) / (sum(C) + 1),
+    A_odds = (A + 1) / (sum(A) + 1),
+    log_OR = log(C_odds / A_odds)
+  ) %>%
+  arrange(desc(log_OR)) 
+
+```
+
+Plot the 15 top words 
+
+```{r}
+word_ratios %>%
+  mutate(pos_log_OR = ifelse(log_OR > 0, "C > A", "A > C")) %>% 
+  group_by(pos_log_OR) %>%
+  top_n(15, abs(log_OR)) %>%
+  ungroup() %>%
+  mutate(word = fct_reorder(word, log_OR)) %>%
+  ggplot(aes(word, log_OR, fill = pos_log_OR)) +
+  geom_col() +
+  coord_flip() +
+  ylab("log odds ratio (C/A)") +
+  scale_fill_discrete(name = "")
+```
+
+## Sentiments next
+
+We’ll use the “bing” sentiment lexicon, which simply categorizes each word as having a positive or negative sentiment.
+
+```{r}
+bing_sentiments = get_sentiments("bing")
+bing_sentiments
 ```
 
