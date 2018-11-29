@@ -5,26 +5,54 @@ date: "11/29/2018"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
+library(tidyverse)
+library(viridis)
+
+library(p8105.datasets)
+
+library(tidytext)
+
 ```
 
-## R Markdown
+```{r}
+data("rest_inspec")
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+rest_inspec = 
+  rest_inspec %>% 
+  filter(grade %in% c("A", "B", "C")) %>% 
+  mutate(inspection_num = row_number(),
+         boro = str_to_title(boro)) %>% 
+  select(inspection_num, boro, grade, score, critical_flag, dba, cuisine_description, zipcode, violation_description)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+Unnest to get a tidy dataset 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+## take every element of the word in violation_description out 
+
+inspection_words = 
+  rest_inspec %>% 
+  unnest_tokens(word, violation_description)
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Let's count some words.
+
+```{r}
+
+data("stop_words")
+inspection_words = 
+  anti_join(inspection_words, stop_words)
+  
+```
+
+
+Count some words...
+
+```{r}
+
+```
+
